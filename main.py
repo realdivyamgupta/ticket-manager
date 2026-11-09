@@ -1,3 +1,6 @@
+import os
+import webbrowser
+from report import generate_dashboard
 from db import init_db, tickets_per_category, avg_resolution_hours, sla_breaches
 from tickets import (
     create_ticket,
@@ -39,7 +42,8 @@ def main():
         print("3. Get next ticket to work on")
         print("4. Resolve ticket")
         print("5. Show reports")
-        print("6. Exit")
+        print("6. Generate HTML dashboard")
+        print("7. Exit")
         choice = input("Choose an option: ").strip()
 
         if choice == "1":
@@ -76,6 +80,10 @@ def main():
                   f"{avg:.2f} hours" if avg is not None else "no resolved tickets yet")
             print("SLA breaches:", sla_breaches() or "none")
         elif choice == "6":
+            path = generate_dashboard()
+            webbrowser.open("file://" + os.path.abspath(path))
+            print("Dashboard generated:", path)
+        elif choice == "7":
             print("Goodbye.")
             break
         else:
