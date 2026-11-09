@@ -1,4 +1,4 @@
-from db import init_db
+from db import init_db, tickets_per_category, avg_resolution_hours, sla_breaches
 from tickets import (
     create_ticket,
     get_all_tickets,
@@ -38,7 +38,8 @@ def main():
         print("2. View all tickets")
         print("3. Get next ticket to work on")
         print("4. Resolve ticket")
-        print("5. Exit")
+        print("5. Show reports")
+        print("6. Exit")
         choice = input("Choose an option: ").strip()
 
         if choice == "1":
@@ -67,6 +68,14 @@ def main():
             except ValueError:
                 print("Please enter a valid number.")
         elif choice == "5":
+            print("\nTickets per category:")
+            for category, count in tickets_per_category():
+                print(f"  {category}: {count}")
+            avg = avg_resolution_hours()
+            print("Average resolution time:",
+                  f"{avg:.2f} hours" if avg is not None else "no resolved tickets yet")
+            print("SLA breaches:", sla_breaches() or "none")
+        elif choice == "6":
             print("Goodbye.")
             break
         else:
