@@ -1,28 +1,77 @@
-import sqlite3
+from db import init_db
+from tickets import (
+    create_ticket,
+    get_all_tickets,
+    get_next_ticket,
+    resolve_ticket,
+    load_heap,
+    PRIORITY_NAMES,
+)
 
-DB_NAME = "tickets.db"
 
-def get_connection():
-    conn = sqlite3.connect(DB_NAME)
-    return conn
+def show_tickets(rows):
+    if not rows:
+        print("No tickets found.")
+        return
+    print(f"{'ID':<4}{'Title':<30}{'Category':<12}{'Priority':<10}{'Status':<13}{'SLA Deadline'}")
+    for r in rows:
+        print(f"{r[0]:<4}{r[1]:<30}{r[2]:<12}{PRIORITY_NAMES[r[3]]:<10}{r[4]:<13}{r[6]}")
 
-def init_db():
-    conn = get_connection()
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS tickets (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            category TEXT NOT NULL,
-            priority INTEGER NOT NULL,
-            status TEXT NOT NULL DEFAULT 'Open',
-            created_at TEXT NOT NULL,
-            sla_deadline TEXT NOT NULL,
-            resolved_at TEXT
-        )
-    """)
-    conn.commit()
-    conn.close()
 
-    if __name__ == "__main__":
+def ask_priority():
+    while True:
+        try:
+            p = int(input("Priority (1=Critical, 2=High, 3=Medium, 4=Low): "))
+            if p in PRIORITY_NAMES:
+                return p
+        except ValueError:
+            pass
+        print("Please enter a number from 1 to 4.")
+
+
+def main():
     init_db()
-    print("Database created successfully.")
+    load_heap()
+    while True:
+        print("\n--- Support Ticket Manager ---")
+        print("1. Create ticket")
+        print("2. View all tickets")
+        print("3. Get next ticket to work on")
+        print("4. Resolve ticket")
+        print("5. Exit")
+        choice = input("Choose an option: ").strip()
+
+        if choice == "1":
+            title = input("Title: ").strip()
+            category = input("Category (e.g. Email, Network, Hardware): ").strip()
+            if not title or not category:
+                print("Title and category cannot be empty.")
+                continue
+            priority = ask_priority()
+            tid = create_ticket(title, category, priority)
+            print(f"Ticket {tid} created.")
+        elif choice == "2":
+            show_tickets(get_all_tickets())
+        elif choice == "3":
+            ticket = get_next_ticket()
+            if ticket:
+                print("Next ticket to work on:")
+                show_tickets([ticket])
+            else:
+                print("No open tickets.")
+        elif choice == "4":
+            try:
+                tid = int(input("Ticket ID to resolve: "))
+                resolve_ticket(tid)
+                print("Ticket resolved.")
+            except ValueError:
+                print("Please enter a valid number.")
+        elif choice == "5":
+            print("Goodbye.")
+            break
+        else:
+            print("Invalid option. Try again.")
+
+
+if __name__ == "__main__":
+    main()
